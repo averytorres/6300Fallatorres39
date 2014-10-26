@@ -1,0 +1,91 @@
+
+Test Case 1  		<single>
+   File size :  Empty
+
+
+Test Case 2  		<single>
+   Number of lines in the file :  None
+
+
+Test Case 3  		<error>
+   Presence of file :  Is not found
+
+
+Test Case 4  		<error>
+   Value user passed for N :  Characters
+
+
+Test Case 5  		<error>
+   Value user passed for N :  Symbols
+
+
+Test Case 6  		<error>
+   Value user passed for N :  Negative number
+
+
+Test Case 7  		<single>
+   Value user passed for N :  Zero
+
+
+Test Case 8  		(Key = 2.2.2.1.6.1.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  One
+   Presence of file                       :  Is found
+   User defined N                         :  True
+   Value user passed for N                :  Positive number
+   Value of N is greater than line length :  True
+
+
+Test Case 9  		(Key = 2.2.2.1.6.2.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  One
+   Presence of file                       :  Is found
+   User defined N                         :  True
+   Value user passed for N                :  Positive number
+   Value of N is greater than line length :  False
+
+
+Test Case 10 		(Key = 2.2.2.2.1.1.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  One
+   Presence of file                       :  Is found
+   User defined N                         :  False
+   Value user passed for N                :  Blank
+   Value of N is greater than line length :  True
+
+
+Test Case 11 		(Key = 2.3.2.1.6.1.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  Many
+   Presence of file                       :  Is found
+   User defined N                         :  True
+   Value user passed for N                :  Positive number
+   Value of N is greater than line length :  True
+
+
+Test Case 12 		(Key = 2.3.2.1.6.2.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  Many
+   Presence of file                       :  Is found
+   User defined N                         :  True
+   Value user passed for N                :  Positive number
+   Value of N is greater than line length :  False
+
+
+Test Case 13 		(Key = 2.3.2.2.1.1.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  Many
+   Presence of file                       :  Is found
+   User defined N                         :  False
+   Value user passed for N                :  Blank
+   Value of N is greater than line length :  True
+
+
+Test Case 14 		(Key = 2.3.2.2.1.2.)
+   File size                              :  Not Empty
+   Number of lines in the file            :  Many
+   Presence of file                       :  Is found
+   User defined N                         :  False
+   Value user passed for N                :  Blank
+   Value of N is greater than line length :  False
+

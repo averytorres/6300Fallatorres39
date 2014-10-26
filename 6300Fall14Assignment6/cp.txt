@@ -1,0 +1,28 @@
+# File
+ 	File size:
+		Empty.				[single][property emptyfile]
+		Not Empty.			
+	Number of lines in the file:
+		None.				[single][if !emptyfile]
+		One.				[if !emptyfile][property oneLine]
+		Many.				[if !emptyfile]
+# FileName
+	Presence of file:
+		Is not found.			[error]
+		Is found.			
+# Numlines
+	
+	User defined N:
+		True.				[property userValue]
+		False.				[property defaultValue]
+	Value user passed for N:
+		Blank.				[if !userValue]
+		Characters.			[error]
+		Symbols.			[error]
+		Negative number.		[error][if !defaultValue]
+		Zero.				[single][if !defaultValue][property NZero]
+		Positive number.		[if !defaultValue]
+	Value of N is greater than line length:
+		True.				[if !NZero]
+		False.				[if !(oneLine && defaultValue)]
+	 
