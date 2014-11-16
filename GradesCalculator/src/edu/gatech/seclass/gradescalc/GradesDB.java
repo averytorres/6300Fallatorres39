@@ -297,8 +297,4 @@ public class GradesDB {
 		return student;
 	}
 
-	public static void main(String args[]) {
-		GradesDB d = new GradesDB("DB/GradesDatabase6300.xlsx");
-		
-	}
 }
