@@ -97,7 +97,9 @@ public class Student {
 	}
 	
 	public int getAttendance() {
-		return Integer.parseInt(attendance);
+		int i = (int) Math.ceil(Double.parseDouble(attendance));
+		return i;
+		
 	}
 	
 	public void setAttendance(String attendance) {
