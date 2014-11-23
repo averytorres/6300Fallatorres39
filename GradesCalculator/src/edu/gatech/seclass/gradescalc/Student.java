@@ -22,6 +22,30 @@ public class Student {
 	}
 
 	
+	public Student(String string, String string2, GradesDB db) {
+		Student temp = db.getStudentByName(string);
+		this.name = temp.getName();
+		this.Gtid = temp.getGtid();
+		this.Email = temp.getEmail();
+		this.attendance = String.valueOf(temp.getAttendance());
+		this.C = temp.getC();
+		this.Cpp = temp.getCpp();
+		this.Java = temp.getJava();
+		this.CSJobEx = temp.getCSJobEx();
+		this.Team = temp.getTeam();
+		this.Assignments = temp.getAssignments();
+		this.Contribs = temp.getContribs();
+		this.TeamGrades = temp.getTeamGrades();
+	}
+
+
+	public Student(String string, String string2, String string3,
+			String string4, String string5, String string6, String string7,
+			GradesDB db) {
+		// TODO Auto-generated constructor stub
+	}
+
+
 	public ArrayList<String> getAssignments() {
 		return Assignments;
 	}

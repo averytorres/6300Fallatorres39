@@ -3,13 +3,22 @@ package edu.gatech.seclass.gradescalc;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStream;
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Map;
 
+import org.apache.poi.hssf.usermodel.HSSFSheet;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
+import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFSheet;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 
@@ -17,9 +26,10 @@ public class GradesDB {
 
 	private XSSFWorkbook workbook;
 	private HashSet<Student> studentInfoDB;
+	private String location;
 
 	public GradesDB(String location) {
-
+		this.location = location;
 		studentInfoDB = new HashSet<Student>();
 		DBSetUp(location);
 
@@ -27,6 +37,7 @@ public class GradesDB {
 
 	private void DBSetUp(String location) {
 		try {
+			this.location = location;
 
 			FileInputStream file = new FileInputStream(new File(location));
 
@@ -132,9 +143,12 @@ public class GradesDB {
 			Row row = rowIterator.next();
 			Iterator<Cell> cellIterator = row.cellIterator();
 			ArrayList<String> studentAssignments = new ArrayList<String>();
-
+			Cell cell = cellIterator.next();
+			cell.setCellType(Cell.CELL_TYPE_STRING);
+			String tempStudent = cell.getStringCellValue();
+			s = this.getStudentByName(tempStudent);
 			while (cellIterator.hasNext()) {
-				Cell cell = cellIterator.next();
+				cell = cellIterator.next();
 				cell.setCellType(Cell.CELL_TYPE_STRING);
 				String tempAssignment = cell.getStringCellValue();
 				studentAssignments.add(tempAssignment);
@@ -246,15 +260,19 @@ public class GradesDB {
 	}
 
 	public int getNumAssignments() {
-		int assignments = 0;
 
-		for (Student s : studentInfoDB) {
-			ArrayList<String> assigns = s.getAssignments();
-			if (assigns.size() > assignments) {
-				assignments = assigns.size();
-			}
-		}
-		return assignments - 1;
+		XSSFSheet sheet = workbook.getSheetAt(3);
+		Row r = sheet.getRow(0);
+		// System.out.println();
+		// int assignments = 0;
+		//
+		// for (Student s : studentInfoDB) {
+		// ArrayList<String> assigns = s.getAssignments();
+		// if (assigns.size() > assignments) {
+		// assignments = assigns.size();
+		// }
+		// }
+		return r.getLastCellNum() - 1;
 	}
 
 	public int getNumProjects() {
@@ -297,5 +315,279 @@ public class GradesDB {
 		return student;
 	}
 
-	
+	public void addAssignment(String string) {
+		InputStream inp;
+		try {
+			FileInputStream file = new FileInputStream(new File(location));
+
+			XSSFWorkbook workbook = new XSSFWorkbook(file);
+			XSSFSheet sheet = workbook.getSheetAt(3);
+			Cell cell = null;
+
+			// Update the value of cell
+			Row row = sheet.getRow(0);
+			row.createCell(this.getNumAssignments() + 1);
+			cell = row.getCell(this.getNumAssignments() + 1);
+			cell.setCellValue(string);
+
+			file.close();
+
+			FileOutputStream outFile = new FileOutputStream(new File(location));
+			workbook.write(outFile);
+			outFile.close();
+
+		} catch (FileNotFoundException e) {
+			System.out.println("File Not Found");
+		} catch (IOException e) {
+			System.out.println("IO Exception");
+		}
+
+	}
+
+	public void addGradesForAssignment(String assignmentName,
+			HashMap<Student, Integer> grades) {
+		InputStream inp;
+		try {
+
+			Iterator<Map.Entry<Student, Integer>> entries = grades.entrySet()
+					.iterator();
+			while (entries.hasNext()) {
+				Map.Entry<Student, Integer> entry = entries.next();
+
+				FileInputStream file = new FileInputStream(new File(location));
+
+				XSSFWorkbook workbook = new XSSFWorkbook(file);
+				XSSFSheet sheet = workbook.getSheetAt(3);
+				Cell cell = null;
+
+				// Update the value of cell
+				Row row = sheet.getRow(0);
+				int location = 0;
+				for (int i = 0; i < row.getLastCellNum(); i++) {
+					if (row.getCell(i).getStringCellValue()
+							.equals(assignmentName)) {
+						location = i;
+					}
+				}
+
+				Iterator<Row> rowIterator = sheet.iterator();
+				rowIterator.next();
+				int studentRow = 0;
+				while (rowIterator.hasNext()) {
+
+					Row row2 = rowIterator.next();
+					if (row2.getCell(0).getStringCellValue()
+							.equals(entry.getKey().getName())) {
+						studentRow = row2.getRowNum();
+						break;
+					}
+
+				}
+
+				Row row3 = sheet.getRow(studentRow);
+
+				row3.createCell(location);
+				Cell cell3 = row3.getCell(location);
+				cell3.setCellType(Cell.CELL_TYPE_STRING);
+				cell3.setCellValue((int) Math.round(entry.getValue()));
+
+				file.close();
+				FileOutputStream outFile = new FileOutputStream(new File(
+						this.location));
+				workbook.write(outFile);
+				outFile.close();
+				// for (Student s : studentInfoDB) {
+				// if (s.getName().equals(entry.getKey().getName())) {
+				// ArrayList<String> assigns = s.getAssignments();
+				// assigns.add(String.valueOf(entry.getValue()));
+				// entry.getKey().setAssignments(assigns);
+				// s.setAssignments(assigns);
+				// }
+				// }
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("File Not Found");
+		} catch (IOException e) {
+			System.out.println("IO Exception");
+		}
+
+	}
+
+	public int getAverageAssignmentsGrade(Student student1) {
+
+		ArrayList<String> assignments = student1.getAssignments();
+		int sum = 0;
+		ArrayList<String> contribs = new ArrayList<String>();
+
+		InputStream inp;
+		try {
+
+			FileInputStream file = new FileInputStream(new File(location));
+
+			XSSFWorkbook workbook = new XSSFWorkbook(file);
+			XSSFSheet sheet = workbook.getSheetAt(3);
+			Iterator<Row> rowIterator = sheet.iterator();
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				if (row.getCell(0).getStringCellValue()
+						.equals(student1.getName())) {
+					Iterator<Cell> cellIterator = row.cellIterator();
+					cellIterator.next();
+					while (cellIterator.hasNext()) {
+						Cell cell = cellIterator.next();
+						cell.setCellType(Cell.CELL_TYPE_STRING);
+						contribs.add(cell.getStringCellValue());
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			System.out.println("HM");
+		}
+
+		for (String assign : contribs) {
+			sum = sum + (int)Math.round(Double.parseDouble(assign));
+		}
+		int avg = sum / contribs.size();
+
+		return avg;
+	}
+
+	public int getAverageProjectsGrade(Student student) {
+
+		double sum = 0;
+		ArrayList<String> contribs = new ArrayList<String>();
+
+		InputStream inp;
+		try {
+
+			FileInputStream file = new FileInputStream(new File(location));
+
+			XSSFWorkbook workbook = new XSSFWorkbook(file);
+			XSSFSheet sheet = workbook.getSheetAt(4);
+			Iterator<Row> rowIterator = sheet.iterator();
+			while (rowIterator.hasNext()) {
+				Row row = rowIterator.next();
+				if (row.getCell(0).getStringCellValue()
+						.equals(student.getName())) {
+					Iterator<Cell> cellIterator = row.cellIterator();
+					cellIterator.next();
+					while (cellIterator.hasNext()) {
+						Cell cell = cellIterator.next();
+						cell.setCellType(Cell.CELL_TYPE_STRING);
+						contribs.add(cell.getStringCellValue());
+					}
+				}
+			}
+
+		} catch (Exception e) {
+			e.printStackTrace();
+		}
+
+		for (Student s : studentInfoDB) {
+			if (s.getName().equals(student.getName())) {
+				ArrayList<String> indivContribs = s.getContribs();
+
+				ArrayList<String> teamGrades = s.getTeamGrades();
+
+				for (int i = 0; i < teamGrades.size(); i++) {
+					sum = sum
+							+ (Integer.parseInt(teamGrades.get(i)) * (Double
+									.parseDouble(contribs.get(i)) / 100));
+				}
+
+				double avg = sum / (teamGrades.size());
+
+				return (int) Math.round(avg);
+
+			}
+		}
+		return -1;
+	}
+
+	public void addIndividualContributions(String projectName1,
+			HashMap<Student, Integer> contributions1) {
+		InputStream inp;
+		try {
+
+			Iterator<Map.Entry<Student, Integer>> entries = contributions1
+					.entrySet().iterator();
+			while (entries.hasNext()) {
+				Map.Entry<Student, Integer> entry = entries.next();
+
+				FileInputStream file = new FileInputStream(new File(location));
+
+				XSSFWorkbook workbook = new XSSFWorkbook(file);
+				XSSFSheet sheet = workbook.getSheetAt(4);
+				Cell cell = null;
+
+				// Update the value of cell
+				Row row = sheet.getRow(0);
+				int location = 0;
+				for (int i = 0; i < row.getLastCellNum(); i++) {
+					if (row.getCell(i).getStringCellValue()
+							.equals(projectName1)) {
+						location = i;
+					}
+				}
+
+				Iterator<Row> rowIterator = sheet.iterator();
+				rowIterator.next();
+				int studentRow = 0;
+				while (rowIterator.hasNext()) {
+
+					Row row2 = rowIterator.next();
+					if (row2.getCell(0).getStringCellValue()
+							.equals(entry.getKey().getName())) {
+						studentRow = row2.getRowNum();
+						break;
+					}
+
+				}
+
+				Row row3 = sheet.getRow(studentRow);
+
+				row3.createCell(location);
+				Cell cell3 = row3.getCell(location);
+				cell3.setCellType(Cell.CELL_TYPE_STRING);
+				cell3.setCellValue((int) Math.round(entry.getValue()));
+
+				file.close();
+				FileOutputStream outFile = new FileOutputStream(new File(
+						this.location));
+				workbook.write(outFile);
+				outFile.close();
+				// for (Student s : studentInfoDB) {
+				// if (s.getName().equals(entry.getKey().getName())) {
+				// ArrayList<String> assigns = s.getContribs();
+				// assigns.add(String.valueOf(entry.getValue()));
+				// entry.getKey().setAssignments(assigns);
+				// s.setContribs(assigns);
+				// }
+				// }
+			}
+		} catch (FileNotFoundException e) {
+			System.out.println("File Not Found");
+		} catch (IOException e) {
+			System.out.println("IO Exception");
+		}
+
+	}
+
+	public void addStudent(Student student) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addProject(String string) {
+		// TODO Auto-generated method stub
+		
+	}
+
+	public void addTeamGrades(String projectName1,
+			HashMap<String, Integer> teamGrades) {
+		// TODO Auto-generated method stub
+		
+	}
+
 }
