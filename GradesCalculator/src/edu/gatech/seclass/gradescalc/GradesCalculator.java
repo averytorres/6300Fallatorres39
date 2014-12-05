@@ -13,7 +13,7 @@ public class GradesCalculator {
 
 		do {
 			if (in.equalsIgnoreCase("Y")) {
-				GradesDB grades = new GradesDB("DB/GradesDatabase6300.xlsx");
+				GradesDB grades = new GradesDB();
 				HashSet<Student> Students = grades.getStudents();
 				String bar = getBarLength(Students);
 				System.out.println(bar);

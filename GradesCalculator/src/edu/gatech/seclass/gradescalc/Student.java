@@ -16,45 +16,66 @@ public class Student {
 	private ArrayList<String> Assignments;
 	private ArrayList<String> Contribs;
 	private ArrayList<String> TeamGrades;
-	
-	public Student(){
+	private GradesDB db;
+
+	public Student() {
 		Assignments = new ArrayList<String>();
 	}
 
-	
 	public Student(String string, String string2, GradesDB db) {
 		Student temp = db.getStudentByName(string);
-		this.name = temp.getName();
-		this.Gtid = temp.getGtid();
-		this.Email = temp.getEmail();
-		this.attendance = String.valueOf(temp.getAttendance());
-		this.C = temp.getC();
-		this.Cpp = temp.getCpp();
-		this.Java = temp.getJava();
-		this.CSJobEx = temp.getCSJobEx();
-		this.Team = temp.getTeam();
-		this.Assignments = temp.getAssignments();
-		this.Contribs = temp.getContribs();
-		this.TeamGrades = temp.getTeamGrades();
+		this.db =db;
+		this.name = temp.name;
+		this.Gtid = temp.Gtid;
+		this.Email = temp.Email;
+		this.attendance = String.valueOf(temp.attendance);
+		this.C = temp.C;
+		this.Cpp = temp.Cpp;
+		this.Java = temp.Java;
+		this.CSJobEx = temp.CSJobEx;
+		this.Team = temp.Team;
+		this.Assignments = temp.Assignments;
+		this.Contribs = temp.Contribs;
+		this.TeamGrades = temp.TeamGrades;
 	}
 
+	@Override
+	public boolean equals(Object compare) {
+		return this.name.equals(((Student) compare).getName());
+	}
+
+	@Override
+	public int hashCode() {
+
+		return Integer.valueOf(name.charAt(0));
+	}
 
 	public Student(String string, String string2, String string3,
 			String string4, String string5, String string6, String string7,
 			GradesDB db) {
-		// TODO Auto-generated constructor stub
+		Student temp = db.getStudentByName(string);
+		this.db =db;
+		this.name = temp.name;
+		this.Gtid = temp.Gtid;
+		this.Email = temp.Email;
+		this.attendance = String.valueOf(temp.attendance);
+		this.C = temp.C;
+		this.Cpp = temp.Cpp;
+		this.Java = temp.Java;
+		this.CSJobEx = temp.CSJobEx;
+		this.Team = temp.Team;
+		this.Assignments = temp.Assignments;
+		this.Contribs = temp.Contribs;
+		this.TeamGrades = temp.TeamGrades;
 	}
-
 
 	public ArrayList<String> getAssignments() {
 		return Assignments;
 	}
 
-
 	public void setAssignments(ArrayList<String> assignments) {
 		Assignments = assignments;
 	}
-
 
 	public String getTeam() {
 		return Team;
@@ -99,55 +120,86 @@ public class Student {
 	public String getName() {
 		return name;
 	}
-	
+
 	public void setName(String name) {
 		this.name = name;
 	}
-	
+
 	public String getGtid() {
 		return Gtid;
 	}
-	
+
 	public void setGtid(String d) {
 		Gtid = d;
 	}
-	
+
 	public String getEmail() {
 		return Email;
 	}
-	
+
 	public void setEmail(String email) {
 		Email = email;
 	}
-	
+
 	public int getAttendance() {
-		int i = (int) Math.ceil(Double.parseDouble(attendance));
+		int i = (int) Math.round(Double.parseDouble(attendance));
 		return i;
-		
+
 	}
-	
+
 	public void setAttendance(String attendance) {
 		this.attendance = attendance;
 	}
-
 
 	public ArrayList<String> getContribs() {
 		return Contribs;
 	}
 
-
 	public void setContribs(ArrayList<String> contribs) {
 		Contribs = contribs;
 	}
-
 
 	public ArrayList<String> getTeamGrades() {
 		return TeamGrades;
 	}
 
-
 	public void setTeamGrades(ArrayList<String> teamGrades) {
 		TeamGrades = teamGrades;
 	}
-	
+
+	public String getAverageAssignmentsGrade() {
+		int sum =0;
+		int avg=0;
+		for(String a:Assignments){
+			sum=sum+Integer.parseInt(a);
+		}
+		avg=sum/Assignments.size();
+		return String.valueOf(avg);
+	}
+
+	public String getAverageProjectsGrade() {
+		double projGrades[] = new double[Contribs.size()];
+		double sum =0;
+		double avg=0;
+		
+		for(int i =0;i<projGrades.length;i++){
+			projGrades[i] = (Double.parseDouble(Contribs.get(i))/100)*Integer.parseInt(TeamGrades.get(i));
+		}
+		for(double a:projGrades){
+			sum=sum+a;
+		}
+		avg=sum/projGrades.length;
+		return String.valueOf(Math.round(avg));
+	}
+
+	public String getOverallGrade() {
+
+		return String.valueOf(db.getOverallGrade(this));
+	}
+
+	public void setDB(GradesDB gradesDB) {
+		this.db=gradesDB;
+		
+	}
+
 }

@@ -30,7 +30,8 @@ public class GradesDBTest {
 		Path dbfilegolden = fs.getPath(GRADES_DB_GOLDEN);
 		Path dbfile = fs.getPath(GRADES_DB);
 		Files.copy(dbfilegolden, dbfile, REPLACE_EXISTING);
-		db = new GradesDB(GRADES_DB);
+		db = new GradesDB();
+		db.loadSpreadsheet(GRADES_DB);
 	}
 
 	@After
@@ -68,15 +69,8 @@ public class GradesDBTest {
 	public void testGetStudents2() {
 		HashSet<Student> students = null;
 		students = db.getStudents();
-		boolean found = false;
-		for (Student s : students) {
-			if (s.getName().compareTo("Cynthia Faast") == 0
-					&& s.getGtid().compareTo("901234514") == 0) {
-				found = true;
-				break;
-			}
-		}
-		assertTrue(found);
+		assertTrue(students.contains(new Student("Cynthia Faast", "901234514",
+				db)));
 	}
 
 	@Test
@@ -103,10 +97,10 @@ public class GradesDBTest {
 	@Test
 	public void testAddAssignment() {
 		db.addAssignment("ASSIGNMENT: black-box testing");
-		db = new GradesDB(GRADES_DB);
+		db.loadSpreadsheet(GRADES_DB);
 		assertEquals(4, db.getNumAssignments());
 		db.addAssignment("ASSIGNMENT: white-box testing");
-		db = new GradesDB(GRADES_DB);
+		db.loadSpreadsheet(GRADES_DB);
 		assertEquals(5, db.getNumAssignments());
 	}
 
@@ -117,13 +111,13 @@ public class GradesDBTest {
 		Student student2 = new Student("Christine Schaeffer", "901234508", db);
 		Student student3 = new Student("Ernesta Anderson", "901234510", db);
 		db.addAssignment(assignmentName);
-		db = new GradesDB(GRADES_DB);
+		db.loadSpreadsheet(GRADES_DB);
 		HashMap<Student, Integer> grades = new HashMap<Student, Integer>();
 		grades.put(student1, 87);
 		grades.put(student2, 94);
 		grades.put(student3, 100);
 		db.addGradesForAssignment(assignmentName, grades);
-		db = new GradesDB(GRADES_DB);
+		db.loadSpreadsheet(GRADES_DB);
 		assertEquals(90, db.getAverageAssignmentsGrade(student1), 1);
 		assertEquals(94, db.getAverageAssignmentsGrade(student2), 1);
 		assertEquals(93, db.getAverageAssignmentsGrade(student3), 1);
@@ -152,7 +146,7 @@ public class GradesDBTest {
 		contributions1.put(student1, 96);
 		contributions1.put(student2, 87);
 		db.addIndividualContributions(projectName1, contributions1);
-		db = new GradesDB(GRADES_DB);
+		db.loadSpreadsheet(GRADES_DB);
 		String projectName2 = "PROJECT 3";
 		HashMap<Student, Integer> contributions2 = new HashMap<Student, Integer>();
 		contributions2.put(student1, 98);
@@ -160,57 +154,5 @@ public class GradesDBTest {
 		db.addIndividualContributions(projectName2, contributions2);
 		assertEquals(90, db.getAverageProjectsGrade(student1), 1);
 		assertEquals(84, db.getAverageProjectsGrade(student2), 1);
-	}
-
-	// //////////////////////////////
-	// NO CHANGES ABOVE THIS LINE //
-	// //////////////////////////////
-
-	@Test
-	public void testAddStudentToDB() {
-	
-		Student student = new Student("STUDENT NAME", "000000000","EMAIL","3","4","5","6", db);
-		db.addStudent(student);
-		Student result = db.getStudentByName("STUDENT NAME");
-		assertEquals("STUDENT NAME", result.getName(), 1);
-		assertEquals("000000000", result.getGtid(), 1);
-		assertEquals("EMAIL", result.getEmail(), 1);
-		assertEquals("3", result.getC(), 1);
-		assertEquals("4", result.getCpp(), 1);
-		assertEquals("5", result.getJava(), 1);
-		assertEquals("6", result.getCSJobEx(), 1);
-	}
-	
-	@Test
-	public void testAddProject() {
-		db.addProject("NEW PROJECT1");
-		db = new GradesDB(GRADES_DB);
-		assertEquals(4, db.getNumProjects());
-		db.addAssignment("NEW PROJECT2");
-		db = new GradesDB(GRADES_DB);
-		assertEquals(5, db.getNumProjects());
-	}
-	
-	@Test
-	public void testAddTeamGrade() {
-		String projectName1 = "PROJECT 1";
-		String teamName1 = "Team 3";
-		int grade1=99;
-		String teamName2 = "Team 1";
-				int grade2 =100;
-		HashMap<String, Integer> teamGrades = new HashMap<String, Integer>();
-		teamGrades.put(teamName1, grade1);
-		teamGrades.put(teamName2, grade2);
-		db.addTeamGrades(projectName1, teamGrades);
-		db = new GradesDB(GRADES_DB);
-		String projectName2 = "PROJECT 3";
-		HashMap<String, Integer> teamGrades2 = new HashMap<String, Integer>();
-		teamGrades2.put(teamName1, 0);
-		teamGrades2.put(teamName2, 1);
-		db.addTeamGrades(projectName2, teamGrades2);
-		Student student1 = db.getStudentByName("Caileigh Raybould");
-		Student student2 = db.getStudentByName("Kym Hiles");
-		assertEquals(42, db.getAverageProjectsGrade(student1), 1);
-		assertEquals(63, db.getAverageProjectsGrade(student2), 1);
 	}
 }

@@ -27,9 +27,23 @@ public class GradesDB {
 	private XSSFWorkbook workbook;
 	private HashSet<Student> studentInfoDB;
 	private String location;
+	private String formula;
 
-	public GradesDB(String location) {
-		this.location = location;
+	// public GradesDB(String location) {
+	// this.location = location;
+	// studentInfoDB = new HashSet<Student>();
+	// DBSetUp(location);
+	//
+	// }
+
+	public GradesDB() {
+		String location = "DB" + File.separator + "GradesDatabase6300.xlsx";
+		this.formula = "AT * 0.2 + AS * 0.4 + PR * 0.4";
+		loadSpreadsheet(location);
+	}
+
+	public void loadSpreadsheet(String gradesDb) {
+		this.location = gradesDb;
 		studentInfoDB = new HashSet<Student>();
 		DBSetUp(location);
 
@@ -251,6 +265,7 @@ public class GradesDB {
 			} else {
 				temp.setCSJobEx("");
 			}
+			temp.setDB(this);
 			studentInfoDB.add(temp);
 		}
 	}
@@ -446,7 +461,7 @@ public class GradesDB {
 		}
 
 		for (String assign : contribs) {
-			sum = sum + (int)Math.round(Double.parseDouble(assign));
+			sum = sum + (int) Math.round(Double.parseDouble(assign));
 		}
 		int avg = sum / contribs.size();
 
@@ -466,16 +481,19 @@ public class GradesDB {
 			XSSFWorkbook workbook = new XSSFWorkbook(file);
 			XSSFSheet sheet = workbook.getSheetAt(4);
 			Iterator<Row> rowIterator = sheet.iterator();
-			while (rowIterator.hasNext()) {
+			boolean found = false;
+			while (rowIterator.hasNext() && !found) {
 				Row row = rowIterator.next();
 				if (row.getCell(0).getStringCellValue()
 						.equals(student.getName())) {
+					found = true;
 					Iterator<Cell> cellIterator = row.cellIterator();
 					cellIterator.next();
 					while (cellIterator.hasNext()) {
 						Cell cell = cellIterator.next();
 						cell.setCellType(Cell.CELL_TYPE_STRING);
-						contribs.add(cell.getStringCellValue());
+						if (!cell.getStringCellValue().equals(""))
+							contribs.add(cell.getStringCellValue());
 					}
 				}
 			}
@@ -576,18 +594,235 @@ public class GradesDB {
 
 	public void addStudent(Student student) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void addProject(String string) {
 		// TODO Auto-generated method stub
-		
+
 	}
 
 	public void addTeamGrades(String projectName1,
 			HashMap<String, Integer> teamGrades) {
 		// TODO Auto-generated method stub
-		
+
+	}
+
+	public String getFormula() {
+		// TODO Auto-generated method stub
+		return this.formula;
+	}
+
+	public void setFormula(String text) {
+		this.formula = text;
+
+	}
+
+	public int getOverallGrade(Student student) throws GradeFormulaException {
+		// +,-,*,/
+		// AT*.2+AS*.4+PR*.4
+		// AT
+		// AS
+		// PR
+		int Var1 = 0;
+		int Var2 = 0;
+		int Var3 = 0;
+
+		if (formula.charAt(0) == 'A' || formula.charAt(0) == 'P') {
+
+			return parseFormula(student);
+		} else {
+			throw new GradeFormulaException("Incorrect Formula Entered!");
+		}
+
+	}
+
+	private int parseFormula(Student student) {
+		try {
+			double ret1 = -99;
+			double ret2 = -99;
+			double ret3 = -99;
+			for (int i = 1; i < formula.length(); i++) {
+
+				if (formula.charAt(i - 1) == 'A' && formula.charAt(i) == 'T') {
+					ret1 = determineAttendence(student, ret1, i);
+				}
+				// AT * 0.2 + AS * 0.4 + PR * 0.4
+				else if (formula.charAt(i - 1) == 'A'
+						&& formula.charAt(i) == 'S') {
+					ret2 = determineAssignments(student, ret2, i);
+
+				}
+				// AT * 0.2 + AS * 0.4 + PR * 0.4
+				else if (formula.charAt(i - 1) == 'P'
+						&& formula.charAt(i) == 'R') {
+					ret3 = determineProjects(student, ret3, i);
+
+				}
+			}
+
+			return calculateGrade(ret1, ret2, ret3);
+		} catch (Exception e) {
+			e.printStackTrace();
+			throw new GradeFormulaException("Incorrect Formula Entered!");
+		}
+	}
+
+	private int calculateGrade(double ret1, double ret2, double ret3)
+			throws Exception {
+		if (ret1 != -99 && ret2 != -99 && ret3 != -99) {
+			String a = Math.round(ret1 + ret2 + ret3) + "";
+			return Integer.parseInt(a);
+		} else if (ret1 == -99 && ret2 == -99 && ret3 != -99) {
+			String a = Math.round(ret3) + "";
+			return Integer.parseInt(a);
+		} else {
+			throw new Exception();
+		}
+	}
+
+	private double determineProjects(Student student, double ret3, int i)
+			throws Exception {
+		String op1 = "";
+		double num = -99;
+		if (formula.charAt(i + 2) == '+' || formula.charAt(i + 2) == '-'
+				|| formula.charAt(i + 2) == '*' || formula.charAt(i + 2) == '/') {
+
+			op1 = formula.charAt(i + 2) + "";
+
+			if (Character.isDigit(formula.charAt(i + 4))
+					&& formula.charAt(i + 4) != '0') {
+
+				num = Double.parseDouble(formula.substring(i + 3, i + 5));
+
+			} else if (formula.charAt(i + 5) == '.') {
+
+				num = Double.parseDouble(formula.substring(i + 3, i + 7));
+
+			}
+
+			else {
+				throw new Exception();
+			}
+
+		} else {
+			throw new Exception();
+		}
+
+		int pr = Integer.parseInt(student.getAverageProjectsGrade());
+		switch (op1) {
+
+		case "+":
+			ret3 = pr + num;
+			break;
+		case "-":
+			ret3 = pr - num;
+			break;
+		case "/":
+			ret3 = pr / num;
+			break;
+		case "*":
+			ret3 = pr * num;
+			break;
+		default:
+			throw new Exception();
+
+		}
+		return ret3;
+	}
+
+	private double determineAssignments(Student student, double ret2, int i)
+			throws Exception {
+		String op1 = "";
+		double num = -99;
+		if (formula.charAt(i + 2) == '+' || formula.charAt(i + 2) == '-'
+				|| formula.charAt(i + 2) == '*' || formula.charAt(i + 2) == '/') {
+
+			op1 = formula.charAt(i + 2) + "";
+
+			if (formula.charAt(i + 5) == '.') {
+
+				num = Double.parseDouble(formula.substring(i + 3, i + 7));
+
+			} else if (Character.isDigit(formula.charAt(i + 4))) {
+
+				num = Double.parseDouble(formula.substring(i + 3, i + 5));
+
+			} else {
+				throw new Exception();
+			}
+
+		} else {
+			throw new Exception();
+		}
+
+		int as = Integer.parseInt(student.getAverageAssignmentsGrade());
+		switch (op1) {
+
+		case "+":
+			ret2 = as + num;
+			break;
+		case "-":
+			ret2 = as - num;
+			break;
+		case "/":
+			ret2 = as / num;
+			break;
+		case "*":
+			ret2 = as * num;
+			break;
+		default:
+			throw new Exception();
+
+		}
+		return ret2;
+	}
+
+	private double determineAttendence(Student student, double ret1, int i)
+			throws Exception {
+		String op1 = "";
+		double num = -99;
+		if (formula.charAt(i + 2) == '+' || formula.charAt(i + 2) == '-'
+				|| formula.charAt(i + 2) == '*' || formula.charAt(i + 2) == '/') {
+
+			op1 = formula.charAt(i + 2) + "";
+
+			if (formula.charAt(i + 5) == '.') {
+
+				num = Double.parseDouble(formula.substring(i + 3, i + 7));
+
+			} else if (Character.isDigit(formula.charAt(i + 4))) {
+
+				num = Double.parseDouble(formula.substring(i + 3, i + 5));
+
+			} else {
+				throw new Exception();
+			}
+
+			int att = student.getAttendance();
+			switch (op1) {
+
+			case "+":
+				ret1 = att + num;
+				break;
+			case "-":
+				ret1 = att - num;
+				break;
+			case "/":
+				ret1 = att / num;
+				break;
+			case "*":
+				ret1 = att * num;
+				break;
+			default:
+				throw new Exception();
+
+			}
+
+		} else {
+			throw new Exception();
+		}
+		return ret1;
 	}
 
 }
